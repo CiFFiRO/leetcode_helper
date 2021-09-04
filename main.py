@@ -129,49 +129,74 @@ class ImplicitTreap:
             self.left = left
             self.right = right
             self.size = 1
+            self.aggregate_value = None
 
-        def recalc(self):
-            self.size = (self.left.size if self.left is not None else 0) + \
-                        (self.right.size if self.right is not None else 0) + 1
+        def recalc(self, monoid=None, neutral_element=None):
+            def aggregate_value(node):
+                if node is None:
+                    return neutral_element
+                if node.aggregate_value is None:
+                    return node.value
+                return node.aggregate_value
 
-    def __init__(self, values=None):
+            self.size = 1
+            self.size += self.left.size if self.left is not None else 0
+            self.size += self.right.size if self.right is not None else 0
+            if monoid is not None:
+                self.aggregate_value = monoid(
+                    monoid(
+                        self.value, aggregate_value(self.left)
+                    ),
+                    aggregate_value(self.right)
+                )
+
+    def __init__(self, values=None, monoid=None, neutral_element=None):
         self.root = None
-        for value in values:
-            self.append(value)
+        self.monoid = monoid
+        self.neutral_element = neutral_element
+        if values is not None:
+            for value in values:
+                self.append(value)
 
-    @staticmethod
-    def _merge(left, right):
+    def _merge(self, left, right):
         if left is None:
             return right
         if right is None:
             return left
 
         if left.y > right.y:
-            left.right = ImplicitTreap._merge(left.right, right)
-            result = left
+            tmp = self._merge(left.right, right)
+            result = ImplicitTreap.ImplicitTreapNode(left.y, left.value, left.left, tmp)
         else:
-            right.left = ImplicitTreap._merge(left, right.left)
-            result = right
+            tmp = self._merge(left, right.left)
+            result = ImplicitTreap.ImplicitTreapNode(right.y, right.value, tmp, right.right)
 
-        result.recalc()
+        result.recalc(self.monoid, self.neutral_element)
         return result
 
-    @staticmethod
-    def _split(node, index):
+    def _split(self, node, index):
         if node is None:
             return None, None
 
         left_size = node.left.size if node.left is not None else 0
         if index >= left_size + 1:
-            left, right = ImplicitTreap._split(node.right, index - left_size - 1)
-            node.right = left
-            node.recalc()
-            return node, right
+            if node.right is None:
+                tmp, right = None, None
+            else:
+                tmp, right = self._split(node.right, index - left_size - 1)
+
+            left = ImplicitTreap.ImplicitTreapNode(node.y, node.value, node.left, tmp)
+            left.recalc(self.monoid, self.neutral_element)
         else:
-            left, right = ImplicitTreap._split(node.left, index)
-            node.left = right
-            node.recalc()
-            return left, node
+            if node.left is None:
+                left, tmp = None, None
+            else:
+                left, tmp = self._split(node.left, index)
+
+            right = ImplicitTreap.ImplicitTreapNode(node.y, node.value, tmp, node.right)
+            right.recalc(self.monoid, self.neutral_element)
+
+        return left, right
 
     def __getitem__(self, index):
         if self.root is None or index > self.root.size or index < -self.root.size:
@@ -200,9 +225,9 @@ class ImplicitTreap:
         if index > self.root.size:
             raise Exception('Index out of range')
 
-        left, right = ImplicitTreap._split(self.root, index)
-        node = ImplicitTreap.ImplicitTreapNode(random.random(), value)
-        self.root = ImplicitTreap._merge(ImplicitTreap._merge(left, node), right)
+        left, right = self._split(self.root, index)
+        node = self.ImplicitTreapNode(random.random(), value)
+        self.root = self._merge(self._merge(left, node), right)
 
     def append(self, value):
         self.insert(self.root.size if self.root is not None else 0, value)
@@ -211,9 +236,9 @@ class ImplicitTreap:
         if index is None:
             index = self.root.size - 1
 
-        left, right = ImplicitTreap._split(self.root, index)
-        _, right = ImplicitTreap._split(right, 1)
-        self.root = ImplicitTreap._merge(left, right)
+        left, right = self._split(self.root, index)
+        _, right = self._split(right, 1)
+        self.root = self._merge(left, right)
 
     def __len__(self):
         return self.root.size if self.root is not None else 0
@@ -233,5 +258,8 @@ class ImplicitTreap:
         dfs(self.root)
         return str(result)
 
-
+    def value(self, begin, end):
+        _, right = self._split(self.root, begin)
+        mid, _ = self._split(right, end - begin)
+        return self.neutral_element if mid is None else mid.aggregate_value
 
