@@ -23,6 +23,7 @@
 - `insert` - ~O(log n)
 - `append` - ~O(log n)
 - `pop` - ~O(log n)
+- `value` - ~O(log n)
 
 # Algorithms
 - `next_permutation` - O(n)
