@@ -1,27 +1,51 @@
 import math
 import random
 import bisect
+from typing import Any, Optional, Callable
 
 
 class DSU:
-    def __init__(self, is_equal_compare):
+    """Union-Find, disjoint-set"""
+    def __init__(self, is_equal_compare: bool = True) -> None:
+        """Create object.
+
+        :param is_equal_compare: compare elements by '=='. False if compare by 'is'.
+        """
         self.to_parent = dict()
         self.is_equal_compare = is_equal_compare
         self.size = 0
         self.elements_number = 0
 
-    def number_elements(self):
+    def number_elements(self) -> int:
+        """Return number elements in all sets.
+
+        :return:
+        """
         return self.elements_number
 
-    def __len__(self):
+    def __len__(self) -> int:
+        """Return number of sets.
+
+        :return:
+        """
         return self.size
 
-    def make(self, x):
+    def make(self, x: Any) -> None:
+        """Create new set.
+
+        :param x: element.
+        :return:
+        """
         self.to_parent[x] = x
         self.size += 1
         self.elements_number += 1
 
-    def find(self, x):
+    def find(self, x: Any) -> Optional[Any]:
+        """Return mark set by element. None if element not in any set.
+
+        :param x: element.
+        :return:
+        """
         if x not in self.to_parent:
             return None
 
@@ -30,7 +54,13 @@ class DSU:
         self.to_parent[x] = self.find(self.to_parent[x])
         return self.to_parent[x]
 
-    def union(self, x, y):
+    def union(self, x: Any, y: Any) -> None:
+        """Union two sets by elements.
+
+        :param x: element is first set.
+        :param y: element is second set.
+        :return:
+        """
         x_mark = self.find(x)
         y_mark = self.find(y)
 
@@ -44,7 +74,14 @@ class DSU:
 
 
 class SegmentTree:
-    def __init__(self, data, monoid, neutral_element):
+    """Segment tree, statistic tree."""
+    def __init__(self, data: list[Any], monoid: Callable[[Any, Any], Any], neutral_element: Any):
+        """Create tree.
+
+        :param data: target list.
+        :param monoid: associative operation.
+        :param neutral_element: neutral element for this operation.
+        """
         self.tree = [0] * (2 ** (math.ceil(math.log2(len(data))) + 1) - 1)
         self.monoid = monoid
         for i in range(len(self.tree) // 2 + 1, len(self.tree) // 2 + len(data)):
@@ -54,7 +91,13 @@ class SegmentTree:
             left, right = 2 * i + 1, 2 * i + 2
             self.tree[i] = self.monoid(self.tree[left], self.tree[right])
 
-    def update(self, i, x):
+    def update(self, i: int, x: Any) -> None:
+        """Update value by index.
+
+        :param i: index.
+        :param x: new value.
+        :return:
+        """
         i += len(self.tree) // 2
         self.tree[i] = x
         parent = (i // 2 - 1) if i % 2 == 0 else i // 2
@@ -62,7 +105,13 @@ class SegmentTree:
             self.tree[parent] = self.monoid(self.tree[2 * parent + 1], self.tree[2 * parent + 2])
             parent = (parent // 2 - 1) if parent % 2 == 0 else parent // 2
 
-    def value(self, i, j):
+    def value(self, i: int, j: int) -> None:
+        """Return aggregated value by monoid in interval [i; j].
+
+        :param i: begin interval.
+        :param j: end interval.
+        :return:
+        """
         left_res, right_res = 0, 0
         i += len(self.tree) // 2
         j += len(self.tree) // 2
@@ -78,7 +127,12 @@ class SegmentTree:
         return self.monoid(left_res, right_res)
 
 
-def length_LIS(nums):
+def length_LIS(nums: list[Any]) -> int:
+    """Return length os longest increased subsequence.
+
+    :param nums: sequence.
+    :return:
+    """
     d = [+math.inf] * (len(nums) + 1)
     d[0] = -math.inf
     d[1] = nums[0]
@@ -97,19 +151,30 @@ def length_LIS(nums):
     return result
 
 
-def gcd(a, b):
+def gcd(a: int, b: int) -> int:
+    """Return greater common divider.
+
+    :param a: first number.
+    :param b: second number.
+    :return:
+    """
     while b != 0:
         b, a = a % b, b
     return a
 
 
-def next_permutation(permutation):
+def next_permutation(permutation: list[Any]) -> Optional[list[Any]]:
+    """Return next permutation. None if next not exist.
+
+    :param permutation:
+    :return:
+    """
     for i in range(len(permutation) - 2, -1, -1):
         if permutation[i] < permutation[i + 1]:
             k = i
             break
     else:
-        return
+        return None
 
     for i in range(len(permutation) - 1, k, -1):
         if permutation[k] < permutation[i]:
@@ -118,12 +183,24 @@ def next_permutation(permutation):
 
     permutation = list(permutation)
     permutation[k], permutation[r] = permutation[r], permutation[k]
-    return ''.join(permutation[0:k + 1] + list(reversed(permutation[k + 1:])))
+    return permutation[0:k + 1] + list(reversed(permutation[k + 1:]))
 
 
 class ImplicitTreap:
+    """List by implicit treap (implicit Cartesian tree)."""
     class ImplicitTreapNode:
-        def __init__(self, y, value, left=None, right=None):
+        """Node treap."""
+        def __init__(
+                self, y: float, value: Any, left: 'ImplicitTreap.ImplicitTreapNode' = None,
+                right: 'ImplicitTreap.ImplicitTreapNode' = None
+        ):
+            """Create object.
+
+            :param y: priority.
+            :param value: value stored in node.
+            :param left: left child.
+            :param right: right child.
+            """
             self.y = y
             self.value = value
             self.left = left
@@ -131,7 +208,13 @@ class ImplicitTreap:
             self.size = 1
             self.aggregate_value = None
 
-        def recalc(self, monoid=None, neutral_element=None):
+        def recalc(self, monoid: Callable = None, neutral_element: Any = None) -> None:
+            """Recalculate size and aggregate value.
+
+            :param monoid: associative operation.
+            :param neutral_element: neutral element for this operation.
+            :return:
+            """
             def aggregate_value(node):
                 if node is None:
                     return neutral_element
@@ -150,7 +233,13 @@ class ImplicitTreap:
                     aggregate_value(self.right)
                 )
 
-    def __init__(self, values=None, monoid=None, neutral_element=None):
+    def __init__(self, values: list[Any] = None, monoid: Callable[[Any, Any], Any] = None, neutral_element: Any = None):
+        """Create list.
+
+        :param values: initialize values.
+        :param monoid: associative operation.
+        :param neutral_element: neutral element for this operation.
+        """
         self.root = None
         self.monoid = monoid
         self.neutral_element = neutral_element
@@ -158,7 +247,16 @@ class ImplicitTreap:
             for value in values:
                 self.append(value)
 
-    def _merge(self, left, right):
+    def _merge(
+            self, left: 'ImplicitTreap.ImplicitTreapNode',
+            right: 'ImplicitTreap.ImplicitTreapNode'
+    ) -> Optional['ImplicitTreap.ImplicitTreapNode']:
+        """Merge two treaps.
+
+        :param left: first treap.
+        :param right: second treap.
+        :return:
+        """
         if left is None:
             return right
         if right is None:
@@ -174,7 +272,15 @@ class ImplicitTreap:
         result.recalc(self.monoid, self.neutral_element)
         return result
 
-    def _split(self, node, index):
+    def _split(
+            self, node: 'ImplicitTreap.ImplicitTreapNode', index: int
+    ) -> tuple[Optional['ImplicitTreap.ImplicitTreapNode'], Optional['ImplicitTreap.ImplicitTreapNode']]:
+        """Split treap by index.
+
+        :param node: treap.
+        :param index: index element.
+        :return:
+        """
         if node is None:
             return None, None
 
@@ -198,7 +304,12 @@ class ImplicitTreap:
 
         return left, right
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int) -> Any:
+        """Return value by index in list.
+
+        :param index: index is list.
+        :return:
+        """
         if self.root is None or index > self.root.size or index < -self.root.size:
             raise Exception('Index out of range')
         if index < 0:
@@ -217,7 +328,13 @@ class ImplicitTreap:
                 node = node.right
                 index -= left_size + 1
 
-    def insert(self, index, value):
+    def insert(self, index: int, value: Any) -> None:
+        """Insert value in list by index.
+
+        :param index: index in list.
+        :param value: value.
+        :return:
+        """
         if self.root is None:
             self.root = ImplicitTreap.ImplicitTreapNode(random.random(), value)
             return
@@ -229,21 +346,44 @@ class ImplicitTreap:
         node = self.ImplicitTreapNode(random.random(), value)
         self.root = self._merge(self._merge(left, node), right)
 
-    def append(self, value):
+    def append(self, value: Any) -> None:
+        """Insert value in tail list.
+
+        :param value: value.
+        :return:
+        """
         self.insert(self.root.size if self.root is not None else 0, value)
 
-    def pop(self, index=None):
+    def pop(self, index: int = None) -> Any:
+        """Pop element by index from list.
+
+        :param index: index.
+        :return:
+        """
         if index is None:
             index = self.root.size - 1
+        if self.root is None or index > self.root.size or index < -self.root.size:
+            raise Exception('Index out of range')
+        if index < 0:
+            index = -1 - index
 
         left, right = self._split(self.root, index)
-        _, right = self._split(right, 1)
+        result, right = self._split(right, 1)
         self.root = self._merge(left, right)
+        return result.value
 
-    def __len__(self):
+    def __len__(self) -> int:
+        """Return length list.
+
+        :return:
+        """
         return self.root.size if self.root is not None else 0
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Return string representation of list.
+
+        :return:
+        """
         result = []
 
         def dfs(node):
@@ -258,7 +398,13 @@ class ImplicitTreap:
         dfs(self.root)
         return str(result)
 
-    def value(self, begin, end):
+    def value(self, begin: int, end: int) -> Any:
+        """Return calculated value on interval [begin; end) by monoid.
+
+        :param begin: left index.
+        :param end: right index.
+        :return:
+        """
         _, right = self._split(self.root, begin)
         mid, _ = self._split(right, end - begin)
         return self.neutral_element if mid is None else mid.aggregate_value
