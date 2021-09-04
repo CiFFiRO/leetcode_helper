@@ -7,7 +7,7 @@ from typing import Any, Optional, Callable
 class DSU:
     """Union-Find, disjoint-set"""
     def __init__(self, is_equal_compare: bool = True) -> None:
-        """Create object.
+        """Create object. O(1)
 
         :param is_equal_compare: compare elements by '=='. False if compare by 'is'.
         """
@@ -17,21 +17,21 @@ class DSU:
         self.elements_number = 0
 
     def number_elements(self) -> int:
-        """Return number elements in all sets.
+        """Return number elements in all sets. O(1)
 
         :return:
         """
         return self.elements_number
 
     def __len__(self) -> int:
-        """Return number of sets.
+        """Return number of sets. O(1)
 
         :return:
         """
         return self.size
 
     def make(self, x: Any) -> None:
-        """Create new set.
+        """Create new set. ~O(1)
 
         :param x: element.
         :return:
@@ -41,7 +41,7 @@ class DSU:
         self.elements_number += 1
 
     def find(self, x: Any) -> Optional[Any]:
-        """Return mark set by element. None if element not in any set.
+        """Return mark set by element. None if element not in any set. ~O(1)
 
         :param x: element.
         :return:
@@ -55,7 +55,7 @@ class DSU:
         return self.to_parent[x]
 
     def union(self, x: Any, y: Any) -> None:
-        """Union two sets by elements.
+        """Union two sets by elements. ~O(1)
 
         :param x: element is first set.
         :param y: element is second set.
@@ -76,7 +76,7 @@ class DSU:
 class SegmentTree:
     """Segment tree, statistic tree."""
     def __init__(self, data: list[Any], monoid: Callable[[Any, Any], Any], neutral_element: Any):
-        """Create tree.
+        """Create tree. O(n)
 
         :param data: target list.
         :param monoid: associative operation.
@@ -92,7 +92,7 @@ class SegmentTree:
             self.tree[i] = self.monoid(self.tree[left], self.tree[right])
 
     def update(self, i: int, x: Any) -> None:
-        """Update value by index.
+        """Update value by index. O(log n)
 
         :param i: index.
         :param x: new value.
@@ -106,7 +106,7 @@ class SegmentTree:
             parent = (parent // 2 - 1) if parent % 2 == 0 else parent // 2
 
     def value(self, i: int, j: int) -> None:
-        """Return aggregated value by monoid in interval [i; j].
+        """Return aggregated value by monoid in interval [i; j]. O(log n)
 
         :param i: begin interval.
         :param j: end interval.
@@ -128,7 +128,7 @@ class SegmentTree:
 
 
 def length_LIS(nums: list[Any]) -> int:
-    """Return length os longest increased subsequence.
+    """Return length os longest increased subsequence. O(n log n)
 
     :param nums: sequence.
     :return:
@@ -152,7 +152,7 @@ def length_LIS(nums: list[Any]) -> int:
 
 
 def gcd(a: int, b: int) -> int:
-    """Return greater common divider.
+    """Return greater common divider. O(log max(a, b))
 
     :param a: first number.
     :param b: second number.
@@ -164,7 +164,7 @@ def gcd(a: int, b: int) -> int:
 
 
 def next_permutation(permutation: list[Any]) -> Optional[list[Any]]:
-    """Return next permutation. None if next not exist.
+    """Return next permutation. None if next not exist. O(n)
 
     :param permutation:
     :return:
@@ -194,7 +194,7 @@ class ImplicitTreap:
                 self, y: float, value: Any, left: 'ImplicitTreap.ImplicitTreapNode' = None,
                 right: 'ImplicitTreap.ImplicitTreapNode' = None
         ):
-            """Create object.
+            """Create object. O(1)
 
             :param y: priority.
             :param value: value stored in node.
@@ -209,7 +209,7 @@ class ImplicitTreap:
             self.aggregate_value = None
 
         def recalc(self, monoid: Callable = None, neutral_element: Any = None) -> None:
-            """Recalculate size and aggregate value.
+            """Recalculate size and aggregate value. O(1)
 
             :param monoid: associative operation.
             :param neutral_element: neutral element for this operation.
@@ -234,7 +234,7 @@ class ImplicitTreap:
                 )
 
     def __init__(self, values: list[Any] = None, monoid: Callable[[Any, Any], Any] = None, neutral_element: Any = None):
-        """Create list.
+        """Create list. ~O(n log n)
 
         :param values: initialize values.
         :param monoid: associative operation.
@@ -251,7 +251,7 @@ class ImplicitTreap:
             self, left: 'ImplicitTreap.ImplicitTreapNode',
             right: 'ImplicitTreap.ImplicitTreapNode'
     ) -> Optional['ImplicitTreap.ImplicitTreapNode']:
-        """Merge two treaps.
+        """Merge two treaps. ~O(log n)
 
         :param left: first treap.
         :param right: second treap.
@@ -275,7 +275,7 @@ class ImplicitTreap:
     def _split(
             self, node: 'ImplicitTreap.ImplicitTreapNode', index: int
     ) -> tuple[Optional['ImplicitTreap.ImplicitTreapNode'], Optional['ImplicitTreap.ImplicitTreapNode']]:
-        """Split treap by index.
+        """Split treap by index. ~O(log n)
 
         :param node: treap.
         :param index: index element.
@@ -305,7 +305,7 @@ class ImplicitTreap:
         return left, right
 
     def __getitem__(self, index: int) -> Any:
-        """Return value by index in list.
+        """Return value by index in list. ~O(log n)
 
         :param index: index is list.
         :return:
@@ -329,7 +329,7 @@ class ImplicitTreap:
                 index -= left_size + 1
 
     def insert(self, index: int, value: Any) -> None:
-        """Insert value in list by index.
+        """Insert value in list by index. ~O(log n)
 
         :param index: index in list.
         :param value: value.
@@ -347,7 +347,7 @@ class ImplicitTreap:
         self.root = self._merge(self._merge(left, node), right)
 
     def append(self, value: Any) -> None:
-        """Insert value in tail list.
+        """Insert value in tail list. ~O(log n)
 
         :param value: value.
         :return:
@@ -355,7 +355,7 @@ class ImplicitTreap:
         self.insert(self.root.size if self.root is not None else 0, value)
 
     def pop(self, index: int = None) -> Any:
-        """Pop element by index from list.
+        """Pop element by index from list. ~O(log n)
 
         :param index: index.
         :return:
@@ -373,14 +373,14 @@ class ImplicitTreap:
         return result.value
 
     def __len__(self) -> int:
-        """Return length list.
+        """Return length list. O(1)
 
         :return:
         """
         return self.root.size if self.root is not None else 0
 
     def __str__(self) -> str:
-        """Return string representation of list.
+        """Return string representation of list. O(n)
 
         :return:
         """
@@ -399,7 +399,7 @@ class ImplicitTreap:
         return str(result)
 
     def value(self, begin: int, end: int) -> Any:
-        """Return calculated value on interval [begin; end) by monoid.
+        """Return calculated value on interval [begin; end) by monoid. ~O(log n)
 
         :param begin: left index.
         :param end: right index.
