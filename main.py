@@ -1,6 +1,7 @@
 import math
 import random
 import bisect
+import collections
 from typing import Any, Optional, Callable
 
 
@@ -408,4 +409,176 @@ class ImplicitTreap:
         _, right = self._split(self.root, begin)
         mid, _ = self._split(right, end - begin)
         return self.neutral_element if mid is None else mid.aggregate_value
+
+
+def prefix_function(string: str) -> list[int]:
+    """Return prefix function for string. O(n)
+
+    :param string: input string.
+    :return:
+    """
+    result = [0] * len(string)
+
+    result[0] = 0
+    for i in range(1, len(string)):
+        k = result[i - 1]
+        while k > 0 and string[i] != string[k]:
+            k = result[k-1]
+        if string[i] == string[k]:
+            k += 1
+        result[i] = k
+
+    return result
+
+
+def knuth_morris_prat(pattern, text) -> list[int]:
+    """Knuth-Morris-Prat algorithm by prefix function. O(|pattern| + |text|)
+    Return indexes of occurrences pattern in text.
+
+    :param pattern: searched pattern.
+    :param text: text.
+    :return:
+    """
+    pi = prefix_function(pattern + '#' + text)
+    result = []
+    for i in range(len(text)):
+        if pi[i + len(pattern) + 1] == len(pattern):
+            result.append(i)
+    return result
+
+
+def aho_corasick(patterns: list[str], text: str):
+    """Aho-Corasick algorithm. O(sum(|pattern|) + |text| + occ)
+    Return occurrences of patterns in text.
+
+    :param patterns: searched patterns.
+    :param text: text.
+    :return:
+    """
+    class Node:
+        node_index = 0
+
+        def __init__(
+                self, parent: Optional['Node'] = None, by_character: Optional[str] = None,
+                index_pattern: Optional[int] = None
+        ):
+            self.parent = parent
+            self.by_character = by_character
+            self.index_pattern = index_pattern
+            self.edges = dict()
+            self.id = self.node_index
+            self.node_index += 1
+
+        def __hash__(self) -> int:
+            return self.id
+
+        def __str__(self) -> str:
+            result = []
+
+            def dfs(node):
+                nonlocal result
+                result.append(f'{node.index_pattern} -> ' + '{')
+                for character in node.edges:
+                    result.append(f'{character}: -> ' + '{')
+                    dfs(node.edges[character])
+                    result.append('} ')
+                result.append('} ')
+
+            dfs(self)
+            return ''.join(result)
+
+    root = Node()
+    for index, pattern in enumerate(patterns):
+        node = root
+        for character in pattern:
+            if character not in node.edges:
+                new_node = Node(node, character)
+                node.edges[character] = new_node
+                node = new_node
+            else:
+                node = node.edges[character]
+        node.index_pattern = index
+
+    states_table = dict()
+    suffix_links_table = dict()
+    optimal_suffix_links_table = dict()
+
+    def next_state(node: 'Node', character: str) -> 'Node':
+        """Return next state in SM.
+
+        :param node: node in trie.
+        :param character:
+        :return:
+        """
+        nonlocal states_table
+
+        if (node, character) in states_table:
+            return states_table[(node, character)]
+
+        if character in node.edges:
+            result = node.edges[character]
+        elif node is root:
+            result = root
+        else:
+            result = next_state(suffix_link(node), character)
+
+        states_table[(node, character)] = result
+        return result
+
+    def suffix_link(node: 'Node') -> 'Node':
+        """Return suffix link.
+
+        :param node: node in trie.
+        :return:
+        """
+        nonlocal suffix_links_table
+
+        if node in suffix_links_table:
+            return suffix_links_table[node]
+
+        if node is root or node.parent is root:
+            result = root
+        else:
+            result = next_state(suffix_link(node.parent), node.by_character)
+
+        suffix_links_table[node] = result
+        return result
+
+    def optimal_suffix_link(node: 'Node') -> 'Node':
+        """Return compressed suffix link.
+
+        :param node: node in trie.
+        :return:
+        """
+        nonlocal optimal_suffix_links_table
+
+        if node in optimal_suffix_links_table:
+            return optimal_suffix_links_table[node]
+
+        link = suffix_link(node)
+        if link.index_pattern is not None:
+            result = link
+        elif node is root:
+            result = root
+        else:
+            result = optimal_suffix_link(link)
+
+        optimal_suffix_links_table[node] = result
+
+        return result
+
+    result = collections.defaultdict(list)
+    current_node = root
+    for index, character in enumerate(text):
+        current_node = next_state(current_node, character)
+        node = current_node
+        while node is not root:
+            if node.index_pattern is not None:
+                result[node.index_pattern].append(
+                    index - len(patterns[node.index_pattern]) + 1
+                )
+            node = optimal_suffix_link(node)
+
+    return result
+
 

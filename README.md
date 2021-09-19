@@ -29,6 +29,9 @@
 - `next_permutation` - O(n)
 - `gcd` - O(log max(a, b))
 - `length_LIS` - O(n log n)
+- `prefix_function` - O(n)
+- `knuth_morris_prat` - O(|pattern| + |text|)
+- `aho_corasick` - O(sum(|pattern|) + |text| + occ)
 
 
 
