@@ -447,7 +447,7 @@ def knuth_morris_prat(pattern, text) -> list[int]:
     return result
 
 
-def aho_corasick(patterns: list[str], text: str):
+def aho_corasick(patterns: list[str], text: str) -> dict[list[int]]:
     """Aho-Corasick algorithm. O(sum(|pattern|) + |text| + occ)
     Return occurrences of patterns in text.
 
@@ -456,12 +456,19 @@ def aho_corasick(patterns: list[str], text: str):
     :return:
     """
     class Node:
+        """Class for trie nodes."""
         node_index = 0
 
         def __init__(
                 self, parent: Optional['Node'] = None, by_character: Optional[str] = None,
                 index_pattern: Optional[int] = None
         ):
+            """Create node.
+
+            :param parent: parent.
+            :param by_character: edge character from parent.
+            :param index_pattern: index pattern.
+            """
             self.parent = parent
             self.by_character = by_character
             self.index_pattern = index_pattern
@@ -470,9 +477,17 @@ def aho_corasick(patterns: list[str], text: str):
             self.node_index += 1
 
         def __hash__(self) -> int:
+            """Return hash value.
+
+            :return:
+            """
             return self.id
 
         def __str__(self) -> str:
+            """Return string trie interpretation.
+
+            :return:
+            """
             result = []
 
             def dfs(node):
@@ -582,3 +597,157 @@ def aho_corasick(patterns: list[str], text: str):
     return result
 
 
+def ukkonen(string: str) -> 'Node':
+    """Build suffix tree by Ukkonen algorithm.
+
+    :param string: string with last character is terminator.
+    :return:
+    """
+    class Node:
+        """Class for suffix tree nodes."""
+        index = 0
+
+        def __init__(self, begin, end, parent):
+            """Create node.
+
+            :param begin: begin index.
+            :param end: end index (not included).
+            :param parent:
+            """
+            self.edges = dict()
+            self.begin = begin
+            self.end = end
+            self.parent = parent
+            self.id = self.index
+            self.index += 1
+
+        def __hash__(self) -> int:
+            """Return hash value.
+
+            :return:
+            """
+            return self.id
+
+        def __len__(self) -> int:
+            """Return length of input edge.
+
+            :return:
+            """
+            return self.end - self.begin
+
+        def __str__(self) -> str:
+            """Return string interpretation suffix tree.
+
+            :return:
+            """
+            result = []
+
+            def dfs(node):
+                nonlocal result
+                result.append(f'{string[node.begin:node.end]} -> ' + '{')
+                for character in node.edges:
+                    result.append(f'{character}: -> ' + '{')
+                    dfs(node.edges[character])
+                    result.append('} ')
+                result.append('} ')
+
+            dfs(self)
+            return ''.join(result)
+
+    root = Node(0, 0, None)
+    suffix_links_table = dict()
+
+    def split(node: 'Node', position: int) -> 'Node':
+        """Split edge by position (need for suffix links).
+
+        :param node:
+        :param position:
+        :return:
+        """
+        if position == len(node):
+            return node
+        if position == 0:
+            return node.parent
+
+        new_node = Node(node.begin, node.begin + position, node.parent)
+        node.parent.edges[string[node.begin]] = new_node
+        new_node.edges[string[node.begin + position]] = node
+        node.parent = new_node
+        node.begin += position
+        return new_node
+
+    def suffix_link(node: 'Node') -> 'Node':
+        """Return suffix link by node.
+
+        :param node:
+        :return:
+        """
+        nonlocal suffix_links_table
+        if node in suffix_links_table:
+            return suffix_links_table[node]
+
+        if node is root:
+            result = root
+        else:
+            link = suffix_link(node.parent)
+            result = split(*next_state(
+                link, len(link),
+                node.begin + (1 if node.parent is root else 0),
+                node.end
+            ))
+
+        suffix_links_table[node] = result
+        return result
+
+    def next_state(node: 'Node', position: int, begin: int, end: int) -> tuple['Node', int]:
+        """Return next state.
+
+        :param node: node.
+        :param position: position on edge.
+        :param begin: begin index.
+        :param end: end index.
+        :return:
+        """
+        while begin < end:
+            if position == len(node):
+                if string[begin] in node.edges:
+                    node = node.edges[string[begin]]
+                    position = 0
+                else:
+                    result = (None, None)
+                    break
+            else:
+                if string[node.begin + position] != string[begin]:
+                    result = (None, None)
+                    break
+                if end - begin < len(node) - position:
+                    result = (node, position + end - begin)
+                    break
+                begin += len(node) - position
+                position = len(node)
+        else:
+            result = (node, position)
+
+        return result
+
+    node = root
+    position = 0
+    for index, character in enumerate(string):
+        while True:
+            node_, position_ = next_state(node, position, index, index + 1)
+            if node_ is not None:
+                node = node_
+                position = position_
+                break
+
+            mid = split(node, position)
+            leaf = Node(index, len(string), mid)
+            mid.edges[string[index]] = leaf
+
+            node = suffix_link(mid)
+            position = len(node)
+
+            if mid is root:
+                break
+
+    return root

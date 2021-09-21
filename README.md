@@ -32,6 +32,7 @@
 - `prefix_function` - O(n)
 - `knuth_morris_prat` - O(|pattern| + |text|)
 - `aho_corasick` - O(sum(|pattern|) + |text| + occ)
+- `ukkonen` - O(n)
 
 
 
