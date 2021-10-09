@@ -751,3 +751,32 @@ def ukkonen(string: str) -> 'Node':
                 break
 
     return root
+
+
+def string_period(string: str) -> int:
+    """Return length period of string. O(n)
+
+    :param string: input string.
+    :return:
+    """
+    pi = prefix_function(string)
+
+    n = len(string)
+    k = n - pi[-1]
+    if n % k == 0:
+        return k
+    else:
+        return n
+
+
+def josephus_task(n: int, k: int) -> int:
+    """Return solution Josephus task. O(n)
+
+    :param n:
+    :param k:
+    :return:
+    """
+    res = 0
+    for i in range(1, n + 1):
+        res = (res + k) % i
+    return res + 1
