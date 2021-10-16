@@ -35,6 +35,4 @@
 - `ukkonen` - O(n)
 - `string_period` - O(n)
 - `josephus_task` - O(n)
-
-
-
+- `eratosthenes_sieve` - O(n log log n)

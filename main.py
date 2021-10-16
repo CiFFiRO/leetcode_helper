@@ -780,3 +780,20 @@ def josephus_task(n: int, k: int) -> int:
     for i in range(1, n + 1):
         res = (res + k) % i
     return res + 1
+
+
+def eratosthenes_sieve(max_number: int) -> set[int]:
+    """Return prime numbers not greater max_number. O(n log log n)
+
+    :param max_number: limit.
+    :return:
+    """
+    is_prime = [True] * (max_number + 1)
+    for i in range(2, max_number + 1):
+        if i*i > max_number:
+            break
+        if is_prime[i]:
+            for j in range(i * i, max_number + 1, i):
+                is_prime[j] = False
+    is_prime[0], is_prime[1] = False, False
+    return {i for i in range(len(is_prime)) if is_prime[i]}
