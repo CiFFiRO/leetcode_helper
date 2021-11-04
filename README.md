@@ -14,6 +14,12 @@
 - `update` - O(log n)
 - `value` - O(log n)
 
+## Segment Tree with lazy propagation
+
+- `__init__` - O(1)
+- `change_range` - O(log N)
+- `top` - O(1)
+
 ## Implicit Treap
 
 - `__init__` - ~O(n log n)

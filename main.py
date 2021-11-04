@@ -128,6 +128,60 @@ class SegmentTree:
         return self.monoid(left_res, right_res)
 
 
+class SegmentTreeWithLazyPropagation:
+    """Segment tree with lazy propagation."""
+    def __init__(self, monoid: Callable[[Any, Any], Any], neutral_element: Any):
+        """Initialize tree.
+
+        :param monoid: monoid.
+        :param neutral_element: neutral element.
+        """
+        self.tree = collections.defaultdict(lambda: neutral_element)
+        self.lazy_data = collections.defaultdict(lambda: neutral_element)
+        self.monoid = monoid
+
+    def _update_range(self, begin, end, changer, left, right, index=1) -> None:
+        """Internal update function. O(log N)
+
+        :param begin: begin updating interval.
+        :param end: end updating interval.
+        :param changer: function for update element.
+        :param left: begin line.
+        :param right: end line.
+        :param index: index for compute.
+        :return:
+        """
+        if right <= begin or end <= left:
+            return
+        if begin <= left < right <= end:
+            self.tree[index] = changer(self.tree[index])
+            self.lazy_data[index] = changer(self.lazy_data[index])
+        else:
+            mid = (left + right) // 2
+            self._update_range(begin, end, changer, left, mid, 2 * index)
+            self._update_range(begin, end, changer, mid, right, 2 * index + 1)
+            self.tree[index] = self.lazy_data[index] + self.monoid(self.tree[2 * index], self.tree[2 * index + 1])
+
+    def change_range(self, begin, end, changer, left, right) -> None:
+        """Internal update function. O(log N)
+
+        :param begin: begin updating interval.
+        :param end: end updating interval.
+        :param changer: function for update element.
+        :param left: begin line.
+        :param right: end line.
+        :return:
+        """
+        self._update_range(begin, end, changer, left, right)
+
+    def top(self) -> Any:
+        """Return root segment tree.
+
+        :return:
+        """
+        return self.tree[1]
+
+
 def length_LIS(nums: list[Any]) -> int:
     """Return length os longest increased subsequence. O(n log n)
 
